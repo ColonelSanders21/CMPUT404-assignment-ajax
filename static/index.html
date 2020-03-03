@@ -39,10 +39,13 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             // This means that we have received DONE from the server
             try {
                 if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    var responseData = JSON.parse(xhr.responseText);
-                    //XXX: Pass the data to the callback!
-                    callback(responseData);
+                    if(callback !== null){
+                        //XXX: parse some JSON from the request!
+                        var responseData = JSON.parse(xhr.responseText);
+                        //XXX: Pass the data to the callback!
+                        callback(responseData);
+                    }
+                    
                 }
             } 
             catch(e) {
@@ -282,7 +285,7 @@ function update() {
         world = serverWorld;
         drawNextFrame();
     };
-    sendJSONXMLHTTPRequest(("/world"),null, setWorld);
+    sendJSONXMLHTTPRequest(("/world"),null, setWorld); // GET request for the world
     drawFrame();
 }
 
