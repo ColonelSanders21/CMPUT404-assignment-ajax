@@ -58,9 +58,6 @@ class World:
 # curl -v   -H "Content-Type: application/json" -X PUT http://127.0.0.1:5000/entity/X -d '{"x":1,"y":1}' 
 
 myWorld = World()  
-myWorld.set("a", {'x': 1, 'y': 2})
-myWorld.set("b", {'x': 2, 'y': 3})
-print(myWorld.get("a"))
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
 # this should come with flask but whatever, it's not my project.
@@ -83,7 +80,11 @@ def hello():
 @app.route("/entity/<entity>", methods=['POST','PUT'])
 def update(entity):
     '''update the entities via this interface'''
-    return None
+    entity_data = flask_post_json()
+    myWorld.set(entity, entity_data)
+
+    # TODO: This needs to return 200, and a JSON body of some sort (?)
+    return "", 201
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
@@ -93,12 +94,13 @@ def world():
 @app.route("/entity/<entity>")    
 def get_entity(entity):
     '''This is the GET version of the entity interface, return a representation of the entity'''
-    return None
+    return jsonify(myWorld.get(entity)), 200
 
 @app.route("/clear", methods=['POST','GET'])
 def clear():
     '''Clear the world out!'''
-    return None
+    myWorld.clear()
+    return jsonify(myWorld.world()), 200
 
 if __name__ == "__main__":
     app.run()

@@ -40,8 +40,9 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
             try {
                 if (xhr.status==200) {
                     //XXX: parse some JSON from the request!
+                    var responseData = JSON.parse(xhr.responseText);
                     //XXX: Pass the data to the callback!
-                    callback(xhr.responseText);
+                    callback(responseData);
                 }
             } 
             catch(e) {
@@ -53,10 +54,18 @@ function sendJSONXMLHTTPRequest(url, objects, callback) {
     //XXX: POST to a URL
     //XXX: set the mimetype and the accept headers!
     // Remember to use application/json !
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader("Content-type", "application/json");
-    xhr.send(JSON.stringify(objects));
-    // console.log("sent");
+    var method = "GET";
+    if(objects){
+        method = "POST";
+    }
+    xhr.open(method, url, true);
+    if(method == "POST"){
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.send(JSON.stringify(objects));
+    }
+    else{
+        xhr.send("");
+    }
 }
 
 
@@ -143,14 +152,14 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data; // {x: __, y: ___, colour: ___, radius:___(optional)}
-    drawNextFrame(); // (but should we?)
+    // drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-
+    sendJSONXMLHTTPRequest(('/entity/' + entity), data, null);
 }
 
 var counter = 0;
 function addEntityWithoutName(data) {
-    //var name = "X"+Math.floor((Math.random()*100)+1);
+    // var name = "X"+Math.floor((Math.random()*100)+1);
     var name = "X"+(counter++)%100;
     addEntity(name,data);
 }
@@ -269,7 +278,11 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    sendJSONXMLHTTPRequest(("http://" + host + "/world"), {}, setWorld);
+    function setWorld(serverWorld){
+        world = serverWorld;
+        drawNextFrame();
+    };
+    sendJSONXMLHTTPRequest(("/world"),null, setWorld);
     drawFrame();
 }
 
