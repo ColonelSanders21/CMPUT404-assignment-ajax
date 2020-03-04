@@ -44,9 +44,12 @@ class World:
 
     def set(self, entity, data):
         self.space[entity] = data
+        self.notify_all(entity, data)
+        
 
     def clear(self):
         self.space = dict()
+        self.listeners = dict()
 
     def get(self, entity):
         return self.space.get(entity,dict())
@@ -54,10 +57,24 @@ class World:
     def world(self):
         return self.space
 
+    # Following based on example provided by Abram Hindle in: https://github.com/abramhindle/CMPUT404-AJAX-Slides/blob/master/ObserverExample/server.py
+    def notify_all(self, entity, data):
+        for listener in self.listeners:
+            self.listeners[listener][entity] = data
+
+    def add_listner(self, listener_name):
+        self.listeners[listener_name] = dict()
+    
+    def get_listener(self, listener_name):
+        return self.listeners[listener_name]
+    
+    def clear_listener(self, listener_name):
+        self.listeners[listener_name] = dict()
+
 # you can test your webservice from the commandline
 # curl -v   -H "Content-Type: application/json" -X PUT http://127.0.0.1:5000/entity/X -d '{"x":1,"y":1}' 
 
-myWorld = World()  
+myWorld = World()
 
 # I give this to you, this is how you get the raw body/data portion of a post in flask
 # this should come with flask but whatever, it's not my project.
@@ -86,8 +103,23 @@ def update(entity):
 
 @app.route("/world", methods=['POST','GET'])    
 def world():
-    '''you should probably return the world here'''
-    return jsonify(myWorld.world()), 200
+    if request.method =='GET':
+        '''you should probably return the world here'''
+        # It's a GET, so let's retrieve the world
+        return jsonify(myWorld.world()), 200
+    else:
+        # Post. They send us the listener id, so we send only what is necessary.
+        listener_id = flask_post_json()
+        if listener_id not in myWorld.listeners.keys():
+            # We have not seen them before. Send them the world.
+            myWorld.add_listner(listener_id)
+            return jsonify(myWorld.world()), 200
+        else:
+            # We have seen them before, so we send them what they need to know and nothing more.
+            updates = myWorld.get_listener(listener_id)
+            myWorld.clear_listener(listener_id)
+            return jsonify(updates), 200
+
 
 @app.route("/entity/<entity>")    
 def get_entity(entity):

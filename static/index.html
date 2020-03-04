@@ -27,6 +27,8 @@
     <script>
 var canvas = document.getElementById('c');
 var host = window.location.host;
+// Setting id from example provided by Abram Hindle at https://github.com/abramhindle/CMPUT404-AJAX-Slides/blob/master/ObserverExample/
+var id = "L"+Math.floor(20000000*Math.random());
 var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
@@ -84,12 +86,14 @@ function drawCircle(context,entity) {
         //moveTo(x,y);
         fillStyle = entity["colour"];
         strokeStyle = fillStyle;
-        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
+        arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);
+        fill();
         stroke();                                
     }
 }
 
 function prepEntity(entity) {
+    // The circle at end of line
     if (!entity["colour"]) {
         entity["colour"] = "#FF0000";
     }
@@ -157,7 +161,7 @@ function addEntity(entity, data) {
     world[entity] = data; // {x: __, y: ___, colour: ___, radius:___(optional)}
     // drawNextFrame(); // (but should we?)
     //XXX: Send a XHTML Request that updates the entity you just  modified!
-    sendJSONXMLHTTPRequest(('/entity/' + entity), data, null);
+    sendJSONXMLHTTPRequest(('/entity/' + entity), data, drawNextFrame);
 }
 
 var counter = 0;
@@ -281,11 +285,15 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
-    function setWorld(serverWorld){
-        world = serverWorld;
-        drawNextFrame();
-    };
-    sendJSONXMLHTTPRequest(("/world"),null, setWorld); // GET request for the world
+    function updateWorld(updates){
+    console.log(updates);
+        for(let entity in updates){
+            world[entity] = updates[entity]
+            drawNextFrame();
+        }
+    }
+    objects = id
+    sendJSONXMLHTTPRequest(("/world"),JSON.stringify(objects), updateWorld); // GET request for the world, sending our id
     drawFrame();
 }
 
