@@ -6,7 +6,7 @@
     <meta content='width=device-width; height=device-height; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;' name='viewport' />
     <meta name="viewport" content="width=device-width" />
     <meta name="license" content="
-        Copyright 2013 Abram Hindle
+        Copyright 2020 Abram Hindle, Anders Johnson
         
         Licensed under the Apache License, Version 2.0 (the "License");
         you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@
     <script>
 var canvas = document.getElementById('c');
 var host = window.location.host;
-// Setting id from example provided by Abram Hindle at https://github.com/abramhindle/CMPUT404-AJAX-Slides/blob/master/ObserverExample/
+// Setting id from example provided by Abram Hindle at https://github.com/abramhindle/CMPUT404-AJAX-Slides/blob/master/ObserverExample/static/index.html
 var id = "L"+Math.floor(20000000*Math.random());
 var context = canvas.getContext("2d");
 var W = canvas.width  = window.innerWidth-6;
@@ -78,17 +78,22 @@ world = {};
 
 //XXX: TODO Make this prettier!
 function drawCircle(context,entity) {
+
     with(context) {
         beginPath();              
         lineWidth = 3;
         var x = entity["x"];
         var y = entity["y"];
         //moveTo(x,y);
-        fillStyle = entity["colour"];
-        strokeStyle = fillStyle;
+        if(entity["radius"] > 10){
+            fillStyle = "white";
+        }else{
+            fillStyle = entity["colour"];
+        }
+        strokeStyle = entity["colour"];
         arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);
         fill();
-        stroke();                                
+        stroke(); 
     }
 }
 
@@ -269,30 +274,63 @@ mouse = (function() {
 
 // Add the application specific mouse listeners!
 //XXX: TODO Make these prettier!
+var endColorIndex = 1;
+var currentColor = [255,0,0];
+var currentColorStr = 'rgb(255,0,0)';
+function colorStep(){
+    // This function cycles through the colours of the rainbow by incrementing/decrementing
+    // RGB values each time we add an entity
+    var rainbow = [
+        [255, 0, 0], //red
+        [255, 127, 0], //orange
+        [255, 255, 0], //yellow
+        [0, 255, 0], //green
+        [0, 0, 255], //blue
+        [75, 0, 130], //indigo
+        [148, 0, 211] //violet
+    ];
+    var endColor = rainbow[endColorIndex];
+    if(!(currentColor[0] == endColor[0] && currentColor[1] == endColor[1] && currentColor[2] == endColor[2])){
+        for(let i=0; i < currentColor.length; i++){
+            if(currentColor[i] < endColor[i]){
+                currentColor[i] += 1;
+            }else if(currentColor[i] > endColor[i]){
+                currentColor[i] -= 1;
+            };
+        };
+        currentColorStr = 'rgb(' + currentColor[0] +','+currentColor[1] + ',' + currentColor[2] + ')';
+    }
+    else{
+        endColorIndex = (endColorIndex + 1)%(rainbow.length);
+        endColor = rainbow[endColorIndex];
+    };
+};
+
 mouse.mousedowners.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+    addEntityWithoutName({'x':x,'y':y,'colour':currentColorStr, 'radius':15});
 });
 
 mouse.mouseuppers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+    addEntityWithoutName({'x':x,'y':y,'colour':currentColorStr, 'radius':15});
 });
 
 mouse.mousedraggers.push(function(x,y,clicked,e) {
-    addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                          'radius':10});
+    // What about a rainbow effect?
+    
+    addEntityWithoutName({'x':x,'y':y,'colour':currentColorStr,'radius':10});
+    colorStep();
 });
 
 
 function update() {
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
     function updateWorld(updates){
-    console.log(updates);
         for(let entity in updates){
-            world[entity] = updates[entity]
+            world[entity] = updates[entity];
             drawNextFrame();
         }
     }
-    objects = id
+    objects = id;
     sendJSONXMLHTTPRequest(("/world"),JSON.stringify(objects), updateWorld); // GET request for the world, sending our id
     drawFrame();
 }

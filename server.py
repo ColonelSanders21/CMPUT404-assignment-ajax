@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-# Copyright 2013 Abram Hindle
+# Copyright 2020 Abram Hindle, Anders Johnson
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ class World:
     def world(self):
         return self.space
 
-    # Following based on example provided by Abram Hindle in: https://github.com/abramhindle/CMPUT404-AJAX-Slides/blob/master/ObserverExample/server.py
+    # Following methods based on example provided by Abram Hindle in: https://github.com/abramhindle/CMPUT404-AJAX-Slides/blob/master/ObserverExample/server.py
     def notify_all(self, entity, data):
         for listener in self.listeners:
             self.listeners[listener][entity] = data
